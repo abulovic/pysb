@@ -49,7 +49,7 @@ def _get_bng_path():
 
     path_var = 'BNGPATH'
     dist_dirs = [
-        '/usr/local/share/BioNetGen',
+        '/usr/share/bionetgen',
         'c:/Program Files/BioNetGen',
         ]
     # BNG 2.1.8 moved BNG2.pl up out of the Perl2 subdirectory, so to be more
