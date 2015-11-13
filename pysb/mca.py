@@ -3,9 +3,9 @@ from collections import namedtuple
 from pysb.integrate import odesolve
 
 
-sens_res = namedtuple('SensitivityResult', ['param', 'left', 'right', 'delta'])
+SensitivityResult = namedtuple('SensitivityResult', ['param', 'left', 'right', 'delta'])
 
-def time_dep_sensitivity(model, t, results = None, delta=0.1, parameters=[]):
+def time_dep_sensitivity(model, t, results = None, delta=0.1, parameters=[], normalize=True): 
 	if not parameters:
 		return
 	all_param_results = {}
@@ -31,9 +31,20 @@ def time_dep_sensitivity(model, t, results = None, delta=0.1, parameters=[]):
 
 		model.parameters[param.name].value = oldval
 
-		all_param_results[param.name] = sens_res(param.name,
+		all_param_results[param.name] = SensitivityResult(param.name,
 												 new_results_left,
 												 new_results_right,
 												 delta * param.value)
+
+	sens_coeffs = {}
+	for pname, sens_result in all_param_results.iteritems():
+		coeff = {}
+		for obs in model.observables:
+			coeff[obs.name] = (sens_result.right[obs.name] - sens_result.left[obs.name]) / sens_result.delta
+			if normalize:
+				coeff[obs.name] *= model.parameters[pname].value / resuts[obs.name]
+		sens_coeffs[pname] = coeff
+
 	
-	return all_param_results
+	return sens_coeffs
+

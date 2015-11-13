@@ -1,6 +1,6 @@
 from __future__ import print_function as _
 import pysb.core
-from pysb.generator.bng import BngGenerator
+from pysb.generator.bng import BngGenerator, BngNetGenerator
 import os
 import subprocess
 import random
@@ -94,6 +94,7 @@ class GenerateNetworkError(RuntimeError):
 _generate_network_code = """
 begin actions
 generate_network({overwrite=>1})
+writeSBML()
 end actions
 """
 
@@ -218,7 +219,7 @@ end actions
     return yfull
 
 
-def generate_network(model, cleanup=True, append_stdout=False, verbose=False):
+def generate_network(model, cleanup=False, append_stdout=False, verbose=False):
     """
     Return the output from BNG's generate_network function given a model.
 
@@ -274,9 +275,10 @@ def generate_network(model, cleanup=True, append_stdout=False, verbose=False):
             output.write(re.sub(r'(^|\n)', r'\n# ', p_out))
     finally:
         if cleanup:
-            for filename in [bng_filename, net_filename]:
-                if os.access(filename, os.F_OK):
-                    os.unlink(filename)
+            pass
+            #for filename in [bng_filename, net_filename]:
+            #    if os.access(filename, os.F_OK):
+            #        os.unlink(filename)
     return output.getvalue()
 
 
@@ -300,6 +302,14 @@ def generate_equations(model, cleanup=True, verbose=False):
         return
     lines = iter(generate_network(model,cleanup,verbose=verbose).split('\n'))
     _parse_netfile(model, lines)
+
+def generate_simple_equations(model, cleanup=True, verbose=False):
+    if model.odes:
+        return
+    gen = BngNetGenerator(model)
+    content = gen.get_content()
+    _parse_netfile(model, iter(content.split('\n')))
+
 
 
 def _parse_netfile(model, lines):
